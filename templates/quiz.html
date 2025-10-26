@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Math Quiz</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>🧮 Math Quiz</h1>
+    <p id="score">Score: 0</p>
+    <p id="questionNum"></p>
+    <p id="question"></p>
+    <input type="text" id="answer" />
+    <button onclick="submitAnswer()">Submit</button>
+    <p id="message"></p>
+  </div>
+
+  <script>
+    let correctCount = 0;
+    let mistakes = 0;
+
+    async function nextQuestion(resetMistakes = true) {
+        const res = await fetch("/next_question");
+        const data = await res.json();
+
+        if (data.done) {
+            document.querySelector(".container").innerHTML = `
+                <h2>Quiz Finished!</h2>
+                <p>Score: ${correctCount}</p>
+                <p>Total Questions: ${data.total || 0}</p>
+            `;
+        } else {
+            if (resetMistakes) mistakes = 0;
+            document.getElementById("questionNum").innerText = `Question ${data.qnum}`;
+            document.getElementById("question").innerText = data.question;
+            document.getElementById("answer").value = "";
+            document.getElementById("message").innerText = "";
+        }
+    }
+
+    async function submitAnswer() {
+        const answer = document.getElementById("answer").value;
+
+        const res = await fetch("/submit_answer", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({answer})
+        });
+
+        const data = await res.json();
+
+        if (data.done) {
+            document.querySelector(".container").innerHTML = `
+                <h2>Quiz Finished!</h2>
+                <p>Wrong Answers: ${data.wrong}</p>
+                <p>Total Questions: ${data.total}</p>
+                <p>Average Time per Question: ${data.avg_time} seconds</p>
+            `;
+        } else {
+            if (data.correct) {
+                correctCount++;
+                document.getElementById("score").innerText = `Score: ${correctCount}`;
+                nextQuestion();  // move to next question
+            } else {
+                mistakes++;
+                if (mistakes >= 2) {
+                    document.getElementById("message").innerText = "Incorrect twice! Showing a new question.";
+                    nextQuestion(false);  // show new question but keep question number
+                } else {
+                    document.getElementById("message").innerText = "Incorrect! Try again.";
+                }
+            }
+        }
+    }
+
+    // Load first question
+    nextQuestion();
+  </script>
+</body>
+</html>
+

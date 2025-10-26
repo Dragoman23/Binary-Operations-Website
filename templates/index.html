@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Math Quiz Setup</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>🧮 Math Quiz Setup</h1>
+    
+    <label>Choose operations:</label><br>
+    <input type="checkbox" value="a" id="add"> Addition
+    <input type="checkbox" value="s" id="sub"> Subtraction
+    <input type="checkbox" value="m" id="mul"> Multiplication
+    <input type="checkbox" value="d" id="div"> Division
+    <br><br>
+
+    <h3>Custom Ranges (min-max for each number)</h3>
+    <div>
+      <label>Addition: </label>
+      <input type="text" id="range_add1" placeholder="0-1000">
+      <input type="text" id="range_add2" placeholder="0-1000">
+    </div>
+    <div>
+      <label>Subtraction: </label>
+      <input type="text" id="range_sub1" placeholder="0-1000">
+      <input type="text" id="range_sub2" placeholder="0-1000">
+    </div>
+    <div>
+      <label>Multiplication: </label>
+      <input type="text" id="range_mul1" placeholder="0-100">
+      <input type="text" id="range_mul2" placeholder="0-100">
+    </div>
+    <div>
+      <label>Division: </label>
+      <input type="text" id="range_div1" placeholder="1-1000">
+      <input type="text" id="range_div2" placeholder="1-100">
+    </div>
+
+    <br>
+    <label>Total Questions:</label>
+    <input type="number" id="total" value="10">
+    <br><br>
+
+    <button id="startBtn">Start Quiz</button>
+  </div>
+
+  <script>
+    document.getElementById("startBtn").addEventListener("click", async () => {
+        const ops = [];
+        const ranges = {};
+
+        if (document.getElementById("add").checked) {
+            ops.push("a");
+            ranges["a"] = [
+                document.getElementById("range_add1").value.split('-').map(Number),
+                document.getElementById("range_add2").value.split('-').map(Number)
+            ];
+        }
+        if (document.getElementById("sub").checked) {
+            ops.push("s");
+            ranges["s"] = [
+                document.getElementById("range_sub1").value.split('-').map(Number),
+                document.getElementById("range_sub2").value.split('-').map(Number)
+            ];
+        }
+        if (document.getElementById("mul").checked) {
+            ops.push("m");
+            ranges["m"] = [
+                document.getElementById("range_mul1").value.split('-').map(Number),
+                document.getElementById("range_mul2").value.split('-').map(Number)
+            ];
+        }
+        if (document.getElementById("div").checked) {
+            ops.push("d");
+            ranges["d"] = [
+                document.getElementById("range_div1").value.split('-').map(Number),
+                document.getElementById("range_div2").value.split('-').map(Number)
+            ];
+        }
+
+        if (ops.length === 0) {
+            alert("Please select at least one operation!");
+            return;
+        }
+
+        const total = parseInt(document.getElementById("total").value);
+
+        await fetch("/start_quiz", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({operations: ops, ranges: ranges, total: total})
+        });
+
+        window.location.href = "/quiz";
+    });
+  </script>
+</body>
+</html>
+
